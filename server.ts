@@ -17,15 +17,25 @@ const upload = multer({
   storage: storage 
 });
 
-// Inicialización de Gemini
-const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
+// Inicialización con soporte de inicialización ociosa (Lazy Initialization)
+let genAIInstance: GoogleGenAI | null = null;
+function getGenAI() {
+  if (!genAIInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY no está configurada en las variables de entorno del servidor.");
     }
+    genAIInstance = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    });
   }
-});
+  return genAIInstance;
+}
 
 app.use(express.json());
 
@@ -36,7 +46,8 @@ app.post("/api/digitize", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No se subió ningún archivo." });
     }
 
-    const model = "gemini-3-flash-preview";
+    const ai = getGenAI();
+    const model = "gemini-3.5-flash";
     const prompt = `
       Analiza este documento y extrae toda la información relevante.
       Devuelve los datos en 3 formatos específicos:
@@ -62,7 +73,7 @@ app.post("/api/digitize", upload.single("file"), async (req, res) => {
       },
     };
 
-    const response = await genAI.models.generateContent({
+    const response = await ai.models.generateContent({
       model,
       contents: { parts: [filePart, { text: prompt }] },
     });

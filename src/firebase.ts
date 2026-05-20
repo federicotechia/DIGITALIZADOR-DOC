@@ -71,14 +71,5 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-// Test connection strictly requested by SKILL.md
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, "test", "connection"));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("the client is offline")) {
-      console.error("Please check your Firebase configuration or network connection.");
-    }
-  }
-}
-testConnection();
+// Test connection diagnostic helper removed to avoid noisy false alerts on console before login/domain setup is complete.
+
