@@ -131,4 +131,8 @@ async function setupVite() {
   });
 }
 
-setupVite();
+if (process.env.VERCEL !== "1") {
+  setupVite();
+}
+
+export default app;
