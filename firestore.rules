@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all (Phase 4, Rule 1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidDocument(data) {
+      return data.keys().hasAll(['id', 'userId', 'fileName', 'plainText', 'json', 'csv', 'createdAt', 'category'])
+        && data.keys().size() == 8
+        && data.id is string && data.id.size() <= 128
+        && data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid
+        && data.fileName is string && data.fileName.size() <= 256
+        && data.plainText is string && data.plainText.size() <= 1048576
+        && data.json is string && data.json.size() <= 1048576
+        && data.csv is string && data.csv.size() <= 1048576
+        && data.createdAt is timestamp
+        && data.category is string && data.category in ['facturas', 'remitos', 'presupuestos', 'notas', 'informes', 'otros'];
+    }
+
+    match /documents/{documentId} {
+      // Allow read/list: only if owner matches auth.uid (Query Enforcer pattern - Phase 4, Rule 3 & 10)
+      allow get: if isSignedIn() && isValidId(documentId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      // Allow create: if signed in and payload is valid document shape and userId == request.auth.uid
+      allow create: if isSignedIn() 
+        && isValidId(documentId)
+        && request.resource.id == documentId
+        && isValidDocument(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+
+      // Allow update: only if owner and valid update shape, and immutable fields are untouched
+      allow update: if isSignedIn()
+        && isValidId(documentId)
+        && resource.data.userId == request.auth.uid
+        && isValidDocument(request.resource.data)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Allow delete: only if owner (Phase 4, Rule 2 - no incoming() check)
+      allow delete: if isSignedIn() && isValidId(documentId) && resource.data.userId == request.auth.uid;
+    }
+  }
+}

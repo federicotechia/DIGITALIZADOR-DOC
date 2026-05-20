@@ -1,0 +1,8 @@
+{
+  "name": "BIENRemix: Digitalizador de Documentos AI",
+  "description": "Digitaliza facturas, recibos y notas usando IA. Exporta a texto, JSON y CSV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

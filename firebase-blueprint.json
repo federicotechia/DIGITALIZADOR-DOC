@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "Document": {
+      "title": "Document",
+      "description": "A digitized document stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the document"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who uploaded the document"
+        },
+        "fileName": {
+          "type": "string",
+          "description": "The name of the original file"
+        },
+        "plainText": {
+          "type": "string",
+          "description": "The plain text extracted by the digitizer"
+        },
+        "json": {
+          "type": "string",
+          "description": "The JSON representation extracted by the digitizer"
+        },
+        "csv": {
+          "type": "string",
+          "description": "The CSV representation extracted by the digitizer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this document was created"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["facturas", "remitos", "presupuestos", "notas", "informes", "otros"],
+          "description": "Document category"
+        }
+      },
+      "required": ["id", "userId", "fileName", "plainText", "createdAt", "category"]
+    }
+  },
+  "firestore": {
+    "/documents/{documentId}": {
+      "schema": "Document",
+      "description": "Collection of digitized documents"
+    }
+  }
+}
