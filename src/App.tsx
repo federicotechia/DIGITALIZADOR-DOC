@@ -186,7 +186,8 @@ export default function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Error al procesar el archivo');
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'Error al procesar el archivo en el servidor');
       }
 
       const data: DigitizeResponse = await response.json();
@@ -200,7 +201,7 @@ export default function App() {
       });
     } catch (error) {
       console.error(error);
-      alert('Hubo un error al digitalizar el documento mediante IA.');
+      alert('Hubo un error al digitalizar el documento: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
@@ -717,7 +718,7 @@ export default function App() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-2xs">
             <VercelGuide 
               onClose={() => setShowVercelGuide(false)} 
-              projectId="integral-grail-pwh20"
+              projectId={db.app.options.projectId || "integral-grail-pwh20"}
             />
           </div>
         )}
